@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Format only the staged files, then re-stage the formatted result.
+files=$(git diff --staged --name-only --diff-filter=ACMR)
+[ -z "$files" ] && exit 0
+
+echo "$files" | xargs ./node_modules/.bin/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true
+echo "$files" | xargs git add

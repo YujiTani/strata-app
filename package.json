@@ -8,10 +8,12 @@
 	],
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.0",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"husky": "^9.1.7"
 	},
 	"scripts": {
 		"lint": "biome check .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"prepare": "husky"
 	}
 }
