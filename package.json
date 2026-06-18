@@ -1,16 +1,17 @@
 {
-  "name": "strata-app",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"name": "strata-app",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.0",
+		"@types/bun": "latest"
+	},
+	"scripts": {
+		"lint": "biome check .",
+		"format": "biome format --write ."
+	}
 }

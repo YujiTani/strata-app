@@ -1,12 +1,4 @@
 {
-  "name": "shared",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  }
+	"name": "@packages/shared",
+	"type": "module"
 }
