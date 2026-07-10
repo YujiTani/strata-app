@@ -2,16 +2,16 @@ FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
 FROM base AS deps
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-COPY apps/server/package.json /temp/prod/apps/server/
-COPY packages/shared/package.json /temp/prod/packages/shared/
-RUN cd /temp/prod && bun install --production --frozen-lockfile --ignore-scripts
+COPY package.json bun.lock ./
+COPY apps/server/package.json ./apps/server/
+COPY packages/shared/package.json ./packages/shared/
+RUN bun install --production --frozen-lockfile --ignore-scripts
 
 FROM base AS release
-COPY --from=deps /temp/prod/node_modules ./node_modules
-COPY . .
+COPY --from=deps /usr/src/app ./
+COPY apps/server ./apps/server
+COPY packages/shared ./packages/shared
 
 USER bun
 EXPOSE 3001
-ENTRYPOINT [ "bun", "run", "apps/server/src/index.ts" ]
+CMD [ "bun", "run", "apps/server/src/index.ts" ]
