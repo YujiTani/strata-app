@@ -13,5 +13,5 @@ COPY apps/server ./apps/server
 COPY packages/shared ./packages/shared
 
 USER bun
-EXPOSE 3001
+EXPOSE 8080
 CMD [ "bun", "run", "apps/server/src/index.ts" ]
