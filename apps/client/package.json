@@ -1,0 +1,17 @@
+{
+	"name": "@apps/client",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"typecheck": "tsc --noEmit -p ."
+	},
+	"dependencies": {
+		"phaser": "^3.90.0"
+	},
+	"devDependencies": {
+		"vite": "^7.0.0"
+	}
+}

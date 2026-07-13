@@ -96,6 +96,7 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 | `docs/game-design.md` | 採掘ループ、スタミナ、パラメータ、村・建物、MVPボリューム、将来拡張 | ゲーム挙動・パラメータ・クライアント実装に関わるとき |
 | `docs/architecture.md` | サーバー権威、採掘の精算方式、検証境界、ドロップ抽選論点、**AI活用の線引き** | サーバー実装・整合性・検証ロジック・SEED設計に関わるとき（最重要） |
 | `docs/data-model.md` | ER図、各テーブルの役割、クリティカルな操作、DB接続注意 | スキーマ・マイグレーション・トランザクション実装のとき |
+| `docs/client-design.md` | クライアントの技術構成（Vite/Phaser）、画面仕様、モックパラメータとサーバー検証の境界、実装ステップの進行状況 | `apps/client` のコード・画面演出・フロントのタスクに関わるとき。パラメータ（速度・クールダウン等）を触るときは `architecture.md` の検証境界も併読 |
 | `docs/progress.md` | 日次の進捗ログ、判断の3階層ルール | 作業の記録・前回までの状況把握 |
 | `docs/adr/` | 個別の技術判断の記録（候補・決定・捨てた理由） | 「なぜこの選定か」を確認/追記するとき |
 
@@ -110,8 +111,12 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 ## 現在地
 
 - **現在のフェーズ: Week 1（ウォーキングスケルトン＝端から端まで本番へ通す）**
-- Week 1 のゴール: 本番URLで `/health` が返る + push で自動デプロイされる骨格
-- 直近の成果物: モノレポ初期化 / Elysiaヘルスチェック / Dockerfile / Fly.ioデプロイ / GitHub Actions（並行でデモ台本・ADR清書）
+- Week 1 のゴール: 本番URLで `/health` が返る + push で自動デプロイされる骨格 → **達成（2026-07-13）**
+- 直近の成果物: モノレポ初期化 / Elysiaヘルスチェック / Dockerfile / Fly.ioデプロイ /
+  GitHub Actions CI/CD（push → lint → typecheck → flyctl deploy、SHA固定・concurrency制御込み）
+- フロント最小構成（Vite+Phaser 起動 + /health 表示）→ **達成（2026-07-13）**。
+  モック採掘演出を `docs/client-design.md` のステップ計画に沿って拡張中（Step 2 から再開）
+- Week 1 残タスク: docker-compose（ローカルPostgres） / ADRの清書
 - 全体像は `docs/roadmap.md` を参照
 
 > セッション開始時、ここの「現在のフェーズ」を必ず確認すること。

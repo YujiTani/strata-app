@@ -1,0 +1,11 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		// ブラウザ実行のため DOM を追加し、Bun のグローバル型は外す
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"types": ["vite/client"]
+	},
+	"include": ["src", "vite.config.ts"],
+	// ルートの exclude（apps/client を除外）を継承すると自分自身を検査できないため上書き
+	"exclude": ["node_modules"]
+}
