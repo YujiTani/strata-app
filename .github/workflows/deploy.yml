@@ -2,8 +2,14 @@ name: Deploy
 on:
   push:
     branches: [master]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,7 +20,10 @@ jobs:
       
       - name: Run lint
         run: bun run lint
-      
+
+      - name: Type check
+        run: bun run typecheck
+
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
       
