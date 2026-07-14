@@ -1,15 +1,29 @@
 import { Elysia } from "elysia";
 
-const defaultAllowedOrigins = "http://localhost:5173,https://strata-app-zjr.pages.dev";
-
 function normalizeOrigin(origin: string): string {
-	return origin.trim().replace(/\/$/, "");
+	return origin.trim().replace(/\/+$/, "");
 }
 
-const allowedOrigins = (Bun.env.CORS_ALLOWED_ORIGINS ?? defaultAllowedOrigins)
-	.split(",")
-	.map(normalizeOrigin)
-	.filter(Boolean);
+function getAllowedOrigins(): string[] {
+	const rawAllowedOrigins = Bun.env.CORS_ALLOWED_ORIGINS;
+
+	if (!rawAllowedOrigins) {
+		throw new Error("CORS_ALLOWED_ORIGINS is not defined");
+	}
+
+	const origins = rawAllowedOrigins
+		.split(",")
+		.map(normalizeOrigin)
+		.filter(Boolean);
+
+	if (origins.length === 0) {
+		throw new Error("CORS_ALLOWED_ORIGINS must contain at least one origin");
+	}
+
+	return origins;
+}
+
+const allowedOrigins = getAllowedOrigins();
 
 function resolveAllowedOrigin(origin: string | null): string | undefined {
 	if (!origin) return undefined;
