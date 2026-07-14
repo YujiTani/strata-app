@@ -8,7 +8,6 @@ function getAllowedOrigins(): string[] {
 	const rawAllowedOrigins = Bun.env.CORS_ALLOWED_ORIGINS;
 
 	if (!rawAllowedOrigins) {
-		console.log(rawAllowedOrigins);
 		throw new Error("CORS_ALLOWED_ORIGINS is not defined");
 	}
 
