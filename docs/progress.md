@@ -68,3 +68,26 @@ SecretsはGH CLIを使って設定できる。今回はRepository Secretsに設�
   ADRの清書が残タスク。Week 2はDB設計レビューから。
 - **所要時間**:
 4h程度
+
+
+### 2026-07-14（Week 1 / 第2日）
+
+- **やったこと**: フロントソースをclaudeflarePagesにデプロイした。
+デプロイしたバックエンドサーバーとクライアント側を連携させた。
+- **判断/詰まったこと**:
+workflowファイルの書き方。
+`name`は、処理内容を模したものにする
+`on`は、発火条件。今回は`master`への`push`時のみ
+`concurrency`は、順番を問わず常に一つずつ直列で実行するようになる。
+`cancel-in-progress`: `false`にしておくと実行中に次の実行が来た際も順番に完了まで行う。中断しない。
+`jobs`には`timeout-minutes`設定をして実行時間を無駄に食い潰さないようにしておく。
+`jobs`の考え方はDockerイメージ作る時と似ている。
+ソースや必要なものをインストール（GitHub公式のActionなどを使う）
+外部ソースのツールを使用する際はSHAで固定した方が安全
+SecretsはGH CLIを使って設定できる。今回はRepository Secretsに設定しOrganization全体やGitHub上の無関係な他のリポジトリからはアクセスできないようにした。
+またFly.ioのトークンを `flyctl tokens create deploy`（デプロイ権限しかない弱いトークン）としたことで、万が一の被害規模が小さくなるように工夫した。
+
+- **次**: docker-compose（ローカルPostgres）、Vite+Phaserのフロント最小構成、
+  ADRの清書が残タスク。Week 2はDB設計レビューから。
+- **所要時間**:
+4h程度
