@@ -27,7 +27,7 @@ const allowedOrigins = getAllowedOrigins();
 
 function resolveAllowedOrigin(origin: string | null): string | undefined {
 	if (!origin) return undefined;
-	if (allowedOrigins.includes("*")) return "*";
+	
 	const normalizedOrigin = normalizeOrigin(origin);
 	return allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : undefined;
 }
