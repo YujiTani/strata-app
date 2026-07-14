@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 
+import { apiUrl } from "../api";
+
 /**
  * 採掘シーン。
  * Step 1 時点では「洞窟風の背景 + タイトル + サーバー疎通表示」のみ。
@@ -43,7 +45,7 @@ export class MiningScene extends Phaser.Scene {
 		healthText.setOrigin(1, 0);
 
 		// サーバー疎通確認。権威はサーバー側にあるため、疎通不能は明示的に見せる。
-		fetch("/health")
+		fetch(apiUrl("/health"))
 			.then(async (res) => {
 				if (!res.ok) throw new Error(`status ${res.status}`);
 				const body = await res.text();
