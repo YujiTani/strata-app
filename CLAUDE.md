@@ -123,3 +123,6 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 > 進捗は `docs/progress.md` に記録される。
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
 
+## 学びの記録
+ユーザーが納得・理解の転換・つまずきの解決を示したら、
+learn-log スキルに従って学習ノート化を一言だけ提案すること。
