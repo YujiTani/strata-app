@@ -8,13 +8,11 @@ function getAllowedOrigins(): string[] {
 	const rawAllowedOrigins = Bun.env.CORS_ALLOWED_ORIGINS;
 
 	if (!rawAllowedOrigins) {
+		console.log(rawAllowedOrigins);
 		throw new Error("CORS_ALLOWED_ORIGINS is not defined");
 	}
 
-	const origins = rawAllowedOrigins
-		.split(",")
-		.map(normalizeOrigin)
-		.filter(Boolean);
+	const origins = rawAllowedOrigins.split(",").map(normalizeOrigin).filter(Boolean);
 
 	if (origins.length === 0) {
 		throw new Error("CORS_ALLOWED_ORIGINS must contain at least one origin");
@@ -27,7 +25,7 @@ const allowedOrigins = getAllowedOrigins();
 
 function resolveAllowedOrigin(origin: string | null): string | undefined {
 	if (!origin) return undefined;
-	
+
 	const normalizedOrigin = normalizeOrigin(origin);
 	return allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : undefined;
 }
