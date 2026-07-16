@@ -110,13 +110,21 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 
 ## 現在地
 
-- **現在のフェーズ: Week 1（ウォーキングスケルトン＝端から端まで本番へ通す）**
+- **現在のフェーズ: Week 1（ウォーキングスケルトン）完了 → Week 2（DB設計の理解 → データの土台）へ移行**
 - Week 1 のゴール: 本番URLで `/health` が返る + push で自動デプロイされる骨格 → **達成（2026-07-13）**
-- 直近の成果物: モノレポ初期化 / Elysiaヘルスチェック / Dockerfile / Fly.ioデプロイ /
-  GitHub Actions CI/CD（push → lint → typecheck → flyctl deploy、SHA固定・concurrency制御込み）
+- 直近の成果物（2026-07-16）:
+  - `FE_ci.yml` 新規作成（`apps/client` の typecheck・build を検証。デプロイはCloudflare Pages側のGit連携に任せ、
+    Actions側は検証専任に割り切る設計）
+  - `BE_deploy.yml` に typecheck ステップを追加（従来は lint のみで、型エラーが未検出のまま本番デプロイされ得る状態だった）
+  - typecheck を `typecheck:be` / `typecheck:fe` にスクリプト分割し、BE/FEそれぞれが自分の担当範囲だけを検査するように整理
+  - 上記CI導入で発覚した `apps/server/src/index.ts` の型エラー（Elysiaの`HTTPHeaders`型）を修正
 - フロント最小構成（Vite+Phaser 起動 + /health 表示）→ **達成（2026-07-13）**。
   モック採掘演出を `docs/client-design.md` のステップ計画に沿って拡張中（Step 2 から再開）
-- Week 1 残タスク: docker-compose（ローカルPostgres） / ADRの清書
+- Week 1 残タスク（未着手）: docker-compose（ローカルPostgres） / ADRの清書
+- **次にやること（Week 2 最初のタスク）**:
+  1. `docs/data-model.md` のDB設計レビュー（**未着手**）: 「なぜ `wallets` はキャッシュで残高は `ledger_entries` から導出するのか」「なぜ `item_instances`（1点もの）と `inventory_stacks`（量）を分けるのか」を自分の言葉で説明できる状態にする。実装に入る前の必須ゲート（`CLAUDE.md`のAI活用の線引き）
+  2. Neonのプロジェクト作成（シンガポールリージョン）・接続文字列の取得
+  3. サーバー側への依存追加（`postgres`, `drizzle-orm`, `drizzle-kit`）と接続実装
 - 全体像は `docs/roadmap.md` を参照
 
 > セッション開始時、ここの「現在のフェーズ」を必ず確認すること。

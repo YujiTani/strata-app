@@ -85,3 +85,26 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
   ADRの清書が残タスク。フロント側のgithubActionsワークフローを作っても良さそう。
 - **所要時間**:
 3h程度
+
+### 2026-07-16（Week 1 / 第3日）
+
+- **やったこと**:
+  - `FE_ci.yml` を新規作成。`apps/client` の typecheck・build を検証するCI（デプロイはCloudflare Pages側のGit連携に任せ、
+    Actions側は検証のみに専念する設計）。
+  - `BE_deploy.yml` に typecheck ステップを追加。従来は `bun run lint`（Biome）のみで型検査をしていなかった。
+  - typecheck を `typecheck:be`（ルート＋`packages/shared`）/ `typecheck:fe`（`apps/client`）にスクリプト分割し、
+    BE/FEそれぞれが自分の担当範囲だけを検査するように整理。
+  - FE_ci導入で発覚した `apps/server/src/index.ts` の型エラー（Elysiaの `HTTPHeaders` 型と自前の `Record<string, string>` の不一致）を修正。
+- **判断/詰まったこと**:
+  - `concurrency.group` の設計思想: BEは「本番環境」という単一の資源を守るため固定文字列でよいが、CIはブランチごとに
+    別々の検証対象なので `${{ github.ref }}` を含めてブランチ専用レーンにする必要がある。BEの設定を無条件にコピペしない。
+  - `paths` フィルタの対象選定: `.gitignore`/`biome.json` はtypecheck/buildの結果に影響しないため対象から除外。
+  - Bunは型を実行時に検査しないため、CIにtypecheckを入れない限り型エラーが本番デプロイをすり抜ける、という実例に遭遇。
+    lintとtypecheckは別物であることを実感した。
+  - `package.json` にスクリプトを手で追記した際、タブ/スペース混在でBiomeのフォーマットチェックに引っかかった
+    （インデントはタブに統一する）。
+- **次**:
+  Week 2 開始。`docs/data-model.md` のDB設計レビュー（`wallets`/`ledger_entries`の関係、
+  `item_instances`/`inventory_stacks`の分割理由を自分の言葉で説明する）がまだ未着手。
+  そのあとNeonのプロジェクト作成（シンガポールリージョン）・接続文字列の取得・サーバー側の依存追加に進む。
+- **所要時間**: 2h
