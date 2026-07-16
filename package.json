@@ -16,6 +16,8 @@
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"prepare": "husky",
-		"typecheck": "tsc --noEmit && tsc --noEmit -p apps/client"
+		"typecheck": "bun run typecheck:be && bun run typecheck:fe",
+		"typecheck:be": "tsc --noEmit",
+		"typecheck:fe": "tsc --noEmit -p apps/client"
 	}
 }
