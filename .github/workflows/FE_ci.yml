@@ -1,0 +1,33 @@
+name: FE_CI
+on:
+  push:
+    paths:
+      - apps/client/**
+      - packages/shared/**
+      - bun.lock
+      - package.json
+      - tsconfig.json
+      - .github/workflows/FE_ci.yml
+
+concurrency:
+  group: fe-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      # BE側のソースを除外するように、sparse-checkoutで絞る方法もあるが、リポジトリが小さくコストが小さいため今回は見送り
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build check
+        run: cd apps/client && bun run build
+
