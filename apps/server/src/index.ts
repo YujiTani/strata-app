@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, type HTTPHeaders } from "elysia";
 
 function normalizeOrigin(origin: string): string {
 	return origin.trim().replace(/\/+$/, "");
@@ -29,7 +29,7 @@ function resolveAllowedOrigin(origin: string | null): string | undefined {
 	return allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : undefined;
 }
 
-function applyCorsHeaders(headers: Record<string, string>, origin: string | null): void {
+function applyCorsHeaders(headers: HTTPHeaders, origin: string | null): void {
 	const allowedOrigin = resolveAllowedOrigin(origin);
 	if (!allowedOrigin) return;
 
