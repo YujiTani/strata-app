@@ -6,10 +6,13 @@
 		"dev": "bun run --watch src/index.ts"
 	},
 	"dependencies": {
+		"@packages/shared": "workspace:*",
+		"drizzle-orm": "^0.45.2",
 		"elysia": "latest",
-		"@packages/shared": "workspace:*"
+		"postgres": "^3.4.9"
 	},
 	"devDependencies": {
-		"bun-types": "latest"
+		"bun-types": "latest",
+		"drizzle-kit": "^0.31.10"
 	}
 }
