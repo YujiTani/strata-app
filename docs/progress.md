@@ -108,3 +108,21 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
   `item_instances`/`inventory_stacks`の分割理由を自分の言葉で説明する）がまだ未着手。
   そのあとNeonのプロジェクト作成（シンガポールリージョン）・接続文字列の取得・サーバー側の依存追加に進む。
 - **所要時間**: 2h
+
+### 2026-07-16（Week 2 / 第1日）
+
+- **やったこと**:
+  - DB設計レビューのゲート通過。「walletsはキャッシュで、残高の正は追記専用の `ledger_entries` から導出」
+    「`item_instances` / `inventory_stacks` の分割基準は代替可能性」を自分の言葉で説明できた。
+  - Neonプロジェクト作成（シンガポール ap-southeast-1、PostgreSQL 18.4）。接続文字列2種
+    （pooled / unpooled）を `apps/server/.env.development` に保存し、psqlで両方の疎通を確認。
+  - 依存追加: `postgres`・`drizzle-orm`（dependencies）、`drizzle-kit`（devDependency）。
+  - `apps/server/db/db-check.ts` 作成（`bun run db:check`）。環境変数の起動時ガード、
+    失敗時 `process.exitCode = 1`、finallyで `sql.end()`。成功系・失敗系とも動作検証済み。
+- **判断/詰まったこと**:
+  - 残高導出の考え方: 同一トランザクションが第一の防衛線、ledgerとの照合は保険という整理で腹落ち。
+  - 「なぜマイグレーションはunpooled直結か」の説明は一度で腹落ちせず、初回 `drizzle-kit migrate`
+    直後に再演する約束で棚上げ中。
+- **次**: `db/schema.ts` に players テーブルを定義（UUID生成をDB側/アプリ側どちらにするか、
+  timestamptz か timestamp か、name の制約、の3判断を持参）→ drizzle.config → generate → migrate。
+- **所要時間**: （記入待ち）
