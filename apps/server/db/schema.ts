@@ -1,5 +1,4 @@
 import {
-	bigint,
 	boolean,
 	date,
 	integer,
@@ -22,7 +21,7 @@ export const wallets = pgTable("wallets", {
 	player_id: uuid("player_id")
 		.primaryKey()
 		.references(() => players.id),
-	balance: bigint("balance", { mode: "bigint" }).default(0n).notNull(),
+	balance: integer("balance").default(0).notNull(),
 });
 
 export const ledger_entries = pgTable("ledger_entries", {
@@ -30,7 +29,7 @@ export const ledger_entries = pgTable("ledger_entries", {
 	player_id: uuid("player_id")
 		.notNull()
 		.references(() => players.id),
-	amount: bigint("amount", { mode: "bigint" }).notNull(),
+	amount: integer("amount").notNull(),
 	reason: varchar("reason", { length: 32 }).notNull(),
 	ref_id: uuid("ref_id").notNull(),
 	created_at: timestamp("created_at").defaultNow().notNull(),
@@ -41,7 +40,7 @@ export const item_defs = pgTable("item_defs", {
 	name: varchar("name", { length: 80 }).notNull(),
 	rarity: varchar("rarity", { length: 32 }).notNull(),
 	kind: varchar("kind", { length: 32 }).notNull(),
-	base_value: bigint("base_value", { mode: "bigint" }).notNull(),
+	base_value: integer("base_value").notNull(),
 	sprite_key: varchar("sprite_key", { length: 64 }).notNull(),
 });
 
@@ -76,7 +75,7 @@ export const listings = pgTable("listings", {
 	item_instance_id: uuid("item_instance_id")
 		.notNull()
 		.references(() => item_instances.id),
-	price: bigint("price", { mode: "bigint" }).notNull(),
+	price: integer("price").notNull(),
 	status: varchar("status", { length: 20 }).notNull(),
 	sold_to: uuid("sold_to").references(() => players.id),
 	created_at: timestamp("created_at").defaultNow().notNull(),
