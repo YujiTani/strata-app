@@ -114,7 +114,7 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
 - **やったこと**:
   - DB設計レビューのゲート通過。「walletsはキャッシュで、残高の正は追記専用の `ledger_entries` から導出」
     「`item_instances` / `inventory_stacks` の分割基準は代替可能性」を自分の言葉で説明できた。
-  - Neonプロジェクト作成（シンガポール ap-southeast-1、PostgreSQL 18.4）。接続文字列2種
+    - Neonプロジェクト作成（シンガポール ap-southeast-1、PostgreSQL 18.4）。接続文字列2種
     （pooled / unpooled）を `apps/server/.env.development` に保存し、psqlで両方の疎通を確認。
   - 依存追加: `postgres`・`drizzle-orm`（dependencies）、`drizzle-kit`（devDependency）。
   - `apps/server/db/db-check.ts` 作成（`bun run db:check`）。環境変数の起動時ガード、

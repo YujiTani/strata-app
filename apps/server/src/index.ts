@@ -1,4 +1,23 @@
+import { swagger } from "@elysiajs/swagger";
+import * as dotenv from "dotenv";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { Elysia, type HTTPHeaders } from "elysia";
+import { insertPlayer, selectPlayer } from "../db/models/player";
+import { table } from "../db/schema";
+
+dotenv.config({ path: ".env.development" });
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+	throw new Error("DATABASE_URL is not defined");
+}
+
+const db = drizzle(databaseUrl);
+
+if (!db) {
+	throw new Error("Failed to initialize Drizzle ORM with the provided database URL");
+}
 
 function normalizeOrigin(origin: string): string {
 	return origin.trim().replace(/\/+$/, "");
@@ -40,10 +59,25 @@ function applyCorsHeaders(headers: HTTPHeaders, origin: string | null): void {
 	headers["Access-Control-Max-Age"] = "86400";
 }
 
-const items = new Elysia({ prefix: "items" })
-	.get("/", () => "Items List")
-	.get("/:id", ({ params: { id } }) => `Item ID: ${id}`)
-	.delete("/:id", ({ params: { id } }) => `Delete Item ID: ${id}`);
+const users = new Elysia({ prefix: "users" })
+	.get("/", () => "Users List")
+	.get("/:id", ({ params: { id } }) => `User ID: ${id}`)
+	.post(
+		"/",
+		async ({ body }) => {
+			const [newPlayer] = await databaseUrl.insert(table.players).values(body).returning();
+
+			if (!newPlayer) {
+				throw new Error("Failed to insert player");
+			}
+
+			return newPlayer;
+		},
+		{
+			body: insertPlayer,
+			response: selectPlayer,
+		},
+	);
 
 new Elysia()
 	.onRequest(({ request, set }) => {
@@ -54,7 +88,9 @@ new Elysia()
 		set.status = 204;
 		return;
 	})
-	.use(items)
+	.decorate("db", databaseUrl)
+	.use(swagger())
+	.use(users)
 	.get("/", () => "Hello World")
 	.get("/health", () => "Hi! I'm healthy!")
 	.listen(8080);

@@ -161,3 +161,9 @@ export const drop_tables = pgTable("drop_tables", {
 	weight: integer("weight").notNull(),
 	is_monster: boolean("is_monster").notNull().default(false),
 });
+
+export const table = {
+	players,
+} as const;
+
+export type Table = typeof table;
