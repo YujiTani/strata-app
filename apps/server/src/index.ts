@@ -65,7 +65,7 @@ const users = new Elysia({ prefix: "users" })
 	.post(
 		"/",
 		async ({ body }) => {
-			const [newPlayer] = await databaseUrl.insert(table.players).values(body).returning();
+			const [newPlayer] = await db.insert(table.players).values(body).returning();
 
 			if (!newPlayer) {
 				throw new Error("Failed to insert player");
@@ -88,7 +88,7 @@ new Elysia()
 		set.status = 204;
 		return;
 	})
-	.decorate("db", databaseUrl)
+	.decorate("db", db)
 	.use(swagger())
 	.use(users)
 	.get("/", () => "Hello World")
