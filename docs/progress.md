@@ -125,7 +125,7 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
     直後に再演する約束で棚上げ中。
 - **次**: `db/schema.ts` に players テーブルを定義（UUID生成をDB側/アプリ側どちらにするか、
   timestamptz か timestamp か、name の制約、の3判断を持参）→ drizzle.config → generate → migrate。
-- **所要時間**: （記入待ち）
+- **所要時間**: 3h
 
 ### 2026-07-17（Week 2 / 第2日）
 
