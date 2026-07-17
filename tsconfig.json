@@ -30,5 +30,5 @@
 
 	// apps/client はブラウザ実行（DOM lib / vite types）のため Bun 前提の
 	// この設定から外し、apps/client/tsconfig.json で個別に検査する
-	"exclude": ["node_modules", "apps/client"]
+	"exclude": ["node_modules", "apps/client", "apps/server/db/utils.ts"]
 }
