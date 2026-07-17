@@ -126,3 +126,27 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
 - **次**: `db/schema.ts` に players テーブルを定義（UUID生成をDB側/アプリ側どちらにするか、
   timestamptz か timestamp か、name の制約、の3判断を持参）→ drizzle.config → generate → migrate。
 - **所要時間**: （記入待ち）
+
+### 2026-07-17（Week 2 / 第2日）
+
+- **やったこと**:
+  - スキーマの制約強化: timestamp列を全て timestamptz 化、金額4列（balance/amount/price/base_value）を
+    integer → bigint(mode:"number") に修正、CHECK制約2本（wallets の残高範囲 0〜999_999_999_999、
+    ledger の amount<>0）、カンスト定数 `MAX_BALANCE` を schema.ts に定義。
+  - 初回マイグレーション完走: generate → 生成SQLの目視検収 → migrate 成功。
+    psql `\dt` で10テーブルの実在と、`\d wallets` でCHECK制約の実体を確認。db:check も pooled/unpooled 両方通過。
+  - 棚上げ宿題「なぜマイグレーションはunpooled直結か」をクローズ。
+    自分の言葉での結論:「pooled 経由で migrate すると工事屋（マイグレーションツール）が札（セッションに
+    紐づくロック）を失う。守る相手は他の客ではなく工事屋自身」。
+  - **役割分担を更新**: 判断=本人・記述=AI可・検収=本人（生成コード・SQLの各行を自分の判断と対応づけて
+    説明できることがゲート）。ADR清書時に `architecture.md` の「AI活用の線引き」へ反映する（宿題）。
+- **判断/詰まったこと**:
+  - 検収ゲートが実際に機能した: AI生成スキーマの timestamp 無指定（without time zone）と、
+    `sql` タグに埋めた定数が `$1` プレースホルダに化ける問題を、生成SQLの目視で migrate 前に捕獲。
+    後者は `${sql.raw(String(MAX_BALANCE))}` で解決（sql.raw は自分の定数にだけ使う）。
+  - BigIntのJSONシリアライズエラーを理由に integer へ落とすのは「表示層の都合で保存層を曲げる」
+    層違いの修理だった。bigint + mode:"number" が正解（カンスト 9999億 < 2^53 で安全）。
+  - ledger は元帳でありイベントログではない。0円の出来事の記録は listings / daily_claims 等の責務。
+- **次**: コミット。残りは Week 1 積み残し（docker-compose・ADR清書）と、サーバー本体への
+  Drizzle クライアント組み込み（db-check を超えて実クエリへ）。
+- **所要時間**: 3h
