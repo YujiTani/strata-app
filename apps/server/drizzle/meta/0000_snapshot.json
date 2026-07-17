@@ -1,5 +1,5 @@
 {
-	"id": "8929cf79-a28c-40e7-a903-a9ba74ff16cd",
+	"id": "d2dc8375-c273-4c96-91bd-12f746c2330c",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"version": "7",
 	"dialect": "postgresql",
@@ -29,7 +29,7 @@
 				},
 				"claimed_at": {
 					"name": "claimed_at",
-					"type": "timestamp",
+					"type": "timestamp with time zone",
 					"primaryKey": false,
 					"notNull": true,
 					"default": "now()"
@@ -218,7 +218,7 @@
 				},
 				"base_value": {
 					"name": "base_value",
-					"type": "integer",
+					"type": "bigint",
 					"primaryKey": false,
 					"notNull": true
 				},
@@ -320,7 +320,7 @@
 				},
 				"amount": {
 					"name": "amount",
-					"type": "integer",
+					"type": "bigint",
 					"primaryKey": false,
 					"notNull": true
 				},
@@ -338,7 +338,7 @@
 				},
 				"created_at": {
 					"name": "created_at",
-					"type": "timestamp",
+					"type": "timestamp with time zone",
 					"primaryKey": false,
 					"notNull": true,
 					"default": "now()"
@@ -359,7 +359,12 @@
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
 			"policies": {},
-			"checkConstraints": {},
+			"checkConstraints": {
+				"ledger_entries_amount_nonzero": {
+					"name": "ledger_entries_amount_nonzero",
+					"value": "\"ledger_entries\".\"amount\" <> 0"
+				}
+			},
 			"isRLSEnabled": false
 		},
 		"public.listings": {
@@ -387,7 +392,7 @@
 				},
 				"price": {
 					"name": "price",
-					"type": "integer",
+					"type": "bigint",
 					"primaryKey": false,
 					"notNull": true
 				},
@@ -405,7 +410,7 @@
 				},
 				"created_at": {
 					"name": "created_at",
-					"type": "timestamp",
+					"type": "timestamp with time zone",
 					"primaryKey": false,
 					"notNull": true,
 					"default": "now()"
@@ -466,14 +471,14 @@
 				},
 				"last_idle_tick_at": {
 					"name": "last_idle_tick_at",
-					"type": "timestamp",
+					"type": "timestamp with time zone",
 					"primaryKey": false,
 					"notNull": true,
 					"default": "now()"
 				},
 				"last_login_at": {
 					"name": "last_login_at",
-					"type": "timestamp",
+					"type": "timestamp with time zone",
 					"primaryKey": false,
 					"notNull": true,
 					"default": "now()"
@@ -548,7 +553,7 @@
 				},
 				"balance": {
 					"name": "balance",
-					"type": "integer",
+					"type": "bigint",
 					"primaryKey": false,
 					"notNull": true,
 					"default": 0
@@ -569,7 +574,12 @@
 			"compositePrimaryKeys": {},
 			"uniqueConstraints": {},
 			"policies": {},
-			"checkConstraints": {},
+			"checkConstraints": {
+				"wallets_balance_range": {
+					"name": "wallets_balance_range",
+					"value": "\"wallets\".\"balance\" >= 0 AND \"wallets\".\"balance\" <= 999999999999"
+				}
+			},
 			"isRLSEnabled": false
 		}
 	},

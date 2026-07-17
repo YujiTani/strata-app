@@ -2,7 +2,7 @@ CREATE TABLE "daily_claims" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"player_id" uuid NOT NULL,
 	"claim_date" date NOT NULL,
-	"claimed_at" timestamp DEFAULT now() NOT NULL
+	"claimed_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "drop_tables" (
@@ -25,7 +25,7 @@ CREATE TABLE "item_defs" (
 	"name" varchar(80) NOT NULL,
 	"rarity" varchar(32) NOT NULL,
 	"kind" varchar(32) NOT NULL,
-	"base_value" integer NOT NULL,
+	"base_value" bigint NOT NULL,
 	"sprite_key" varchar(64) NOT NULL
 );
 --> statement-breakpoint
@@ -40,27 +40,28 @@ CREATE TABLE "item_instances" (
 CREATE TABLE "ledger_entries" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"player_id" uuid NOT NULL,
-	"amount" integer NOT NULL,
+	"amount" bigint NOT NULL,
 	"reason" varchar(32) NOT NULL,
 	"ref_id" uuid NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "ledger_entries_amount_nonzero" CHECK ("ledger_entries"."amount" <> 0)
 );
 --> statement-breakpoint
 CREATE TABLE "listings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"seller_id" uuid NOT NULL,
 	"item_instance_id" uuid NOT NULL,
-	"price" integer NOT NULL,
+	"price" bigint NOT NULL,
 	"status" varchar(20) NOT NULL,
 	"sold_to" uuid,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "players" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(40) NOT NULL,
-	"last_idle_tick_at" timestamp DEFAULT now() NOT NULL,
-	"last_login_at" timestamp DEFAULT now() NOT NULL
+	"last_idle_tick_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"last_login_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "village_buildings" (
@@ -72,7 +73,8 @@ CREATE TABLE "village_buildings" (
 --> statement-breakpoint
 CREATE TABLE "wallets" (
 	"player_id" uuid PRIMARY KEY NOT NULL,
-	"balance" integer DEFAULT 0 NOT NULL
+	"balance" bigint DEFAULT 0 NOT NULL,
+	CONSTRAINT "wallets_balance_range" CHECK ("wallets"."balance" >= 0 AND "wallets"."balance" <= 999999999999)
 );
 --> statement-breakpoint
 ALTER TABLE "daily_claims" ADD CONSTRAINT "daily_claims_player_id_players_id_fk" FOREIGN KEY ("player_id") REFERENCES "public"."players"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

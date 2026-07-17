@@ -44,7 +44,7 @@ export const wallets = pgTable(
 	(table) => [
 		check(
 			"wallets_balance_range",
-			sql`${table.balance} >= 0 AND ${table.balance} <= ${MAX_BALANCE}`,
+			sql`${table.balance} >= 0 AND ${table.balance} <= ${sql.raw(String(MAX_BALANCE))}`,
 		),
 	],
 );
