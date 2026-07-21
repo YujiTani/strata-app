@@ -1,8 +1,9 @@
 import { swagger } from "@elysiajs/swagger";
 import * as dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Elysia, type HTTPHeaders } from "elysia";
+import { Elysia, type HTTPHeaders, t } from "elysia";
 import { insertPlayer, selectPlayer } from "../db/models/player";
+import { selectWallet } from "../db/models/wallet";
 import { table } from "../db/schema";
 
 dotenv.config({ path: ".env.development" });
@@ -59,23 +60,47 @@ function applyCorsHeaders(headers: HTTPHeaders, origin: string | null): void {
 	headers["Access-Control-Max-Age"] = "86400";
 }
 
-const users = new Elysia({ prefix: "users" })
-	.get("/", () => "Users List")
-	.get("/:id", ({ params: { id } }) => `User ID: ${id}`)
+const players = new Elysia({ prefix: "players" })
+	.get("/", () => "Players List")
+	.get("/:id", ({ params: { id } }) => `Player ID: ${id}`)
 	.post(
 		"/",
 		async ({ body }) => {
-			const [newPlayer] = await db.insert(table.players).values(body).returning();
+			const result = await db.transaction(async (tx) => {
+				const [newPlayer] = await tx.insert(table.players).values(body).returning();
 
-			if (!newPlayer) {
-				throw new Error("Failed to insert player");
-			}
+				if (!newPlayer) {
+					throw new Error("Failed to insert player");
+				}
 
-			return newPlayer;
+				const [newWallet] = await tx
+					.insert(table.wallets)
+					.values({ player_id: newPlayer.id, balance: 0 })
+					.returning();
+
+				if (!newWallet) {
+					throw new Error("Failed to insert wallet");
+				}
+				return { newPlayer, newWallet };
+			});
+
+			return {
+				player: result.newPlayer,
+				wallet: result.newWallet,
+			};
 		},
 		{
 			body: insertPlayer,
-			response: selectPlayer,
+			response: {
+				200: t.Object({
+					player: t.Object({
+						...selectPlayer,
+					}),
+					wallet: t.Object({
+						...selectWallet,
+					}),
+				}),
+			},
 		},
 	);
 
@@ -90,7 +115,7 @@ new Elysia()
 	})
 	.decorate("db", db)
 	.use(swagger())
-	.use(users)
+	.use(players)
 	.get("/", () => "Hello World")
 	.get("/health", () => "Hi! I'm healthy!")
 	.listen(8080);
