@@ -164,6 +164,7 @@ export const drop_tables = pgTable("drop_tables", {
 
 export const table = {
 	players,
+	wallets,
 } as const;
 
 export type Table = typeof table;
