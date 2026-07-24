@@ -153,3 +153,35 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
   apps/server/index.tsがごちゃついているので、今後のためにファイルの切り出しを行なっていく。
   徐々に分けていく構想にしたい。できるならDDDなどで分けた方が評価されるかもしれない。
 - **所要時間**: 3h
+
+### 2026-07-24（Week 2 / 第3日）
+
+- **やったこと**:
+  - players + wallet 同時作成トランザクション（2026-07-21分、コミット漏れの整理も兼ねる）に続き、
+    放置tickの冪等な付与（`POST /players/:id/tick`）を実装。roadmapのWeek 2最終項目。
+  - `players`・`wallets`を`SELECT ... FOR UPDATE`でロックし、DB側の`now()`を基準に経過時間を
+    30秒単位に切り捨てて精算。端数は`last_idle_tick_at`に残して次回へ繰り越し。
+    `MAX_BALANCE`の残り枠でクランプ、クランプ後の額が0のときは`wallets`/`ledger_entries`の書き込みを
+    スキップ（ただし`players.last_idle_tick_at`の前進は消費単位数が0でない限り実施＝クランプで
+    貰えなくても時間は進める。上限到達時に「放置し続ければ得」という誘因を作らないための判断）。
+  - `ledger_entries.ref_id`（関連取引ID）に参照先が無い問題に気づき、最小限の`idle_tick_events`
+    テーブルを新設（列は`id`/`player_id`/`created_at`のみ）。UI向けの拡張（raw units等）は
+    要件未確定のため見送り、Issue #3として保留。
+  - ローカルでの動作確認完了（基本フロー・0単位ケース・並行2リクエストでの二重計上なし・
+    存在しないプレイヤーの挙動）。途中で実装バグを2件発見・修正:
+    `sql<Date>`の型注釈だけでは実行時にDateへ変換されない問題（`.mapWith()`で解決）、
+    `idle_tick_events`のマイグレーション未適用。
+  - Docker動作確認は、Bunの`.env`自動ロードがカレントディレクトリ依存で、Dockerfileの起動パス
+    （リポジトリルートから実行）だと`apps/server/.env.development`を拾えないという既存コードの
+    問題にぶつかり中断。Issue #4として切り出し、Task化して保留。
+- **判断/詰まったこと**:
+  - `UPDATE ... RETURNING`は更新後の値しか返せない、という仕様に気づき、「消費単位数」を
+    自己参照UPDATEだけで安全に取り出すのは並行実行下で無理だと判断。今回に限り
+    `SELECT ... FOR UPDATE`をWeek3の予定より前倒しで導入（詳細はlearn-logのseed参照）。
+  - roadmapには「players/wallets/ledger_entriesのCRUD」とあるが、ゲームのシナリオ上
+    read/delete等のフルCRUDは不要と判断し、作成（player作成時のinsert）と更新
+    （tick時のUPDATE/INSERT）のみを実装して先に進めることにした。
+- **次**: Issue #4（Docker起動時の環境変数問題）の解決。Week 1積み残し（docker-compose・ADR清書）も
+  未着手のまま残っている。Week 3（同時実行制御の山場：listings購入、FOR UPDATE、ロック順序、
+  並行攻撃の自動テスト化）へ進む前に、これらの整理をどう扱うか判断する。
+- **所要時間**: 15h（3日間ぶんの合算。厳密な計測ではないので目安程度）
