@@ -1,13 +1,10 @@
 import { swagger } from "@elysiajs/swagger";
-import * as dotenv from "dotenv";
 import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Elysia, type HTTPHeaders, t } from "elysia";
 import { insertPlayer, selectPlayer } from "../db/models/player";
 import { selectWallet } from "../db/models/wallet";
 import { MAX_BALANCE, table } from "../db/schema";
-
-dotenv.config({ path: ".env.development" });
 
 const databaseUrl = process.env.DATABASE_URL;
 

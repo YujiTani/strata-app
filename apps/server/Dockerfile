@@ -16,5 +16,6 @@ COPY apps/server ./apps/server
 COPY packages/shared ./packages/shared
 
 USER bun
+WORKDIR /usr/src/app/apps/server
 EXPOSE 8080
-CMD [ "bun", "run", "apps/server/src/index.ts" ]
+CMD [ "bun", "run", "src/index.ts" ]
