@@ -185,3 +185,35 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
   未着手のまま残っている。Week 3（同時実行制御の山場：listings購入、FOR UPDATE、ロック順序、
   並行攻撃の自動テスト化）へ進む前に、これらの整理をどう扱うか判断する。
 - **所要時間**: 15h（3日間ぶんの合算。厳密な計測ではないので目安程度）
+
+### 2026-07-24（Week 3 準備 / 第4日）
+
+- **やったこと**:
+  - Issue #4を解消（クローズ済み）。`src/index.ts`から`dotenv.config()`を削除し、Bunの`.env`自動ロード
+    （実行時CWD基準）に一本化。`Dockerfile`の`release`ステージに`WORKDIR /usr/src/app/apps/server`を
+    追加してCMDを`bun run src/index.ts`に変更し、ローカルと同じ自動ロードの仕組みが本番でも成立する
+    構造にした。`drizzle.config.ts`のdotenvはローカルCLI専用（本番イメージに同梱されない）なので対象外。
+  - 副次的に`.dockerignore`の穴を発見・修正: 除外パターンがビルドコンテキスト**ルート直下**にしか
+    マッチせず、`apps/server/.env.development`（実際のNeon接続文字列）がDockerイメージに焼き込まれて
+    いた。`**/`を付けて深さに関わらず除外されるよう修正。`docker build --no-cache`後にイメージ内へ
+    `find`をかけて焼き込み解消を確認。
+  - `flyctl logs`で本番を確認したところ、**放置tick実装（Week 2最終日）以降ずっと本番がクラッシュ
+    ループしていた**ことが発覚（`error: Cannot find package 'dotenv'`が起動10回リトライ後に停止済み）。
+    さらに`flyctl secrets list`で本番Fly appに`DATABASE_URL`自体が設定されていないことも判明。
+    Neon dev用の接続文字列を本番secretsに設定（本番用DBを分離するかは後回しと判断。理由:
+    現状は実ユーザーがいない個人開発段階のため、まず「共用していると自覚した上で進める」ことを優先。
+    分離するなら`docs/adr/`行き）。
+  - 修正をpush→CIデプロイは成功表示だったが、クラッシュループ中のマシンには通常のローリング
+    デプロイが割り込めず（`"machine still active, refusing to start"`）実機には反映されていなかった。
+    `flyctl deploy`を手動で再実行し強制的に切り替え、`/health`が200・`POST /players`で実DB書き込み
+    成功を確認して復旧。
+- **判断/詰まったこと**:
+  - 「デプロイがCIで成功表示」と「実機に新イメージが反映されている」は別物、という実例に遭遇。
+    ヘルスチェック未設定（`fly.toml`に`[[http_service.checks]]`が無い）の状態でクラッシュループ中の
+    マシンに当てるローリングデプロイは、image切り替え自体が失敗してもリリースは成功扱いになりうる。
+  - 本番DBをdevと共用する判断は「今は要件がないので後回し」という明示的な先送り。将来ユーザーが
+    増える前に必ず戻ってくる論点として記録しておく。
+- **次**: Week1積み残しのdocker-compose（`docker run`の手間を減らす目的。ローカルPostgres追加は
+  Neon採用済みのため見送り、server単体の起動をラップする方向）。その後Week3（listings購入トラン
+  ザクション）に着手。
+- **所要時間**: 2h
