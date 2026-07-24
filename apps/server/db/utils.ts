@@ -6,7 +6,6 @@
 import { Kind, type TObject } from "@sinclair/typebox";
 import type { Table } from "drizzle-orm";
 import { type BuildSchema, createInsertSchema, createSelectSchema } from "drizzle-typebox";
-import { table } from "./schema";
 
 type Spread<T extends TObject | Table, Mode extends "select" | "insert" | undefined> =
 	T extends TObject<infer Fields>
@@ -49,30 +48,6 @@ export const spread = <T extends TObject | Table, Mode extends "select" | "inser
 	}
 
 	for (const key of Object.keys(table.properties)) newSchema[key] = table.properties[key];
-
-	return newSchema as any;
-};
-
-/**
- * Spread a Drizzle Table into a plain object
- *
- * If `mode` is 'insert', the schema will be refined for insert
- * If `mode` is 'select', the schema will be refined for select
- * If `mode` is undefined, the schema will be spread as is, models will need to be refined manually
- */
-export const spreads = <
-	T extends Record<string, TObject | Table>,
-	Mode extends "select" | "insert" | undefined,
->(
-	models: T,
-	mode?: Mode,
-): {
-	[K in keyof T]: Spread<T[K], Mode>;
-} => {
-	const newSchema: Record<string, unknown> = {};
-	const keys = Object.keys(models);
-
-	for (const key of keys) newSchema[key] = spread(models[key], mode);
 
 	return newSchema as any;
 };

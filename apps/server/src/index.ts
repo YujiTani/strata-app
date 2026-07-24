@@ -157,6 +157,11 @@ const players = new Elysia({ prefix: "players" })
 						.set({ balance: wallet.balance + overTimeBalance })
 						.where(eq(table.wallets.player_id, id))
 						.returning();
+
+					if (!updatedWallet) {
+						throw new Error("Failed to update wallet");
+					}
+
 					const [idleTickEvent] = await tx
 						.insert(table.idle_tick_events)
 						.values({ player_id: id })
