@@ -162,9 +162,24 @@ export const drop_tables = pgTable("drop_tables", {
 	is_monster: boolean("is_monster").notNull().default(false),
 });
 
+export const idle_tick_events = pgTable("idle_tick_events", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	player_id: uuid("player_id")
+		.notNull()
+		.references(() => players.id),
+	created_at: timestamp("created_at", {
+		mode: "date",
+		withTimezone: true,
+	})
+		.defaultNow()
+		.notNull(),
+});
+
 export const table = {
 	players,
 	wallets,
+	ledger_entries,
+	idle_tick_events,
 } as const;
 
 export type Table = typeof table;
