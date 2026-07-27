@@ -217,3 +217,54 @@ CORSエラーの解消に少し時間がかかった、実際は設定できて�
   Neon採用済みのため見送り、server単体の起動をラップする方向）。その後Week3（listings購入トラン
   ザクション）に着手。
 - **所要時間**: 2h
+
+### 2026-07-27（Week 3 / 第5日）
+
+- **やったこと**:
+  - **Neonのbranch機能でdev用DBを分離**（Week 3で意図的にバグを再現する前提を整えた）。
+    production branchから`Current data`でbranchを作成し、`apps/server/.env.development`を
+    新branchの接続文字列に差し替え。あわせて`DATABASE_URL`（pooled）と
+    `DATABASE_URL_UNPOOLED`（直結）が**同一値だった疑い（`docs/adr/0006`）が事実だった**ことを
+    旧設定のコメント行で確認し、別ホストになるよう是正。
+  - 分離の検証: dev側に`POST /players`でマーカー行を作り、Neon Consoleのproduction branchで
+    `SELECT * FROM players WHERE name='dev-branch-check'`が0件であることを確認。
+    pooled接続でも`FOR UPDATE`入りのtickトランザクションが通ることも確認。
+  - **本番へマイグレーションを適用する仕組みが最初から存在しないことが発覚**。
+    `Dockerfile`は`CMD ["bun","run","src/index.ts"]`のみ、`BE_deploy.yml`にもmigrate記述なし。
+    これまでは「DBを共用していたため、ローカルでの`drizzle-kit migrate`が副作用として本番にも
+    効いていた」だけだった。分離した瞬間にこの経路が消滅した。
+  - 対策としてCIに組み込み: `apps/server`に`db:generate`/`db:migrate`スクリプトを追加し、
+    `BE_deploy.yml`の`Deploy to fly.io`の**直前**で`bun run db:migrate`を実行するステップを追加
+    （`working-directory: apps/server`、GitHub Actions secretの`DATABASE_URL_UNPOOLED`を注入）。
+  - **ゲートが閉じることを実地検証**: secretに空相当の値が入ったままpushしたところ、
+    `Run DB migrations` failure → `Setup flyctl` / `Deploy to fly.io` が **skipped**、
+    本番`/health`は200のまま、`fly status`のVERSIONも34から変わらず。
+    secret修正後にrerunして全stepがsuccess、VERSION 34→35に更新されたことを確認。
+  - Week 3の設計問答: Q1（ロック対象の行）とQ3（デッドロックの防ぎ方）に回答。
+- **判断/詰まったこと**:
+  - 目的を「ローカルと同じ状態にする」から「**デプロイされたコードが要求するスキーマを本番が満たす**」
+    に置き直した。基準はローカルの状態ではなく、masterにコミットされた`drizzle/*.sql`。
+  - 実行場所の3案（CIのdeploy前 / コンテナ起動時のentrypoint / 手動）を比較し、CI案を採用。
+    決め手は「migrateが失敗すればdeployに到達しない」の1点。entrypoint案を却下した理由は
+    複数マシン起動時の競合だが、これは将来の話ではなく`fly status`で**すでにマシンが2台**動いていた。
+  - この方式が安全なのは**追加系マイグレーションに限る**。migrate成功→deploy失敗で止まると
+    「新しい列があるが知らない古いコード」が残る。列削除やNOT NULL後付けにはexpand/contractが要る
+    （drizzle-kitにdown migrationは無く、ロールバックは存在しない＝fix-forwardのみ）。
+  - `""`（クォート2文字）は**非空文字列**なので`drizzle.config.ts`の`if (!databaseUrl) throw`を
+    素通りし、接続段階で失敗していた。ゲートが閉じたのは設計したガードではなく接続失敗による。
+    **falsyチェックは「未設定」しか防げず「間違った値」は防げない**。
+  - secretの置き場所を間違えかけた。CIで実行する案なのに最初はFlyのsecretに入れていた
+    （Flyのsecretはコンテナ内のプロセスしか読めず、CIからは見えない）。
+  - Q3で最初に出した答え「ロックされていないかチェックしてから進める」は、Q2で自分が
+    「危険だ」と指摘した`check-then-act`と同じ構造だった。確認と確保が分割できる時点で隙間が残る。
+    `FOR UPDATE`が優れているのは両者が不可分な1操作であるため。
+- **次**:
+  - Q2（`FOR UPDATE`無しで二重販売が成立するタイムライン）を手書きで埋める。
+  - `POST /listings`（出品API）の実装 → 購入トランザクション → 並行購入で二重販売の再現。
+  - ロック順序の固定は、テーブル間の順序（listings → item_instances → wallets）も決めて明文化する。
+    `ORDER BY ... FOR UPDATE`でロック取得順が保証されるかは未確認のため、並行スクリプトで実験して決める。
+  - **secretの向き先（production branchを指しているか）は未検証**。今回は新規`.sql`が無いため
+    devを向いていても同じくsuccessする。次のマイグレーションをpushし、production branchの
+    `drizzle.__drizzle_migrations`が2本→3本に増えるかで検証する。
+  - 本番マイグレーション方式のADR（3案の比較とentrypoint案を捨てた理由）を1本起こす。
+- **所要時間**: 約2h（目安）

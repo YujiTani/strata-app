@@ -133,16 +133,33 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
   - `docker-compose.yml`を追加（server単体をラップ、DBは引き続きNeon。ローカルPostgresは
     二重運用コストを避けるため見送り）
   - `docs/adr/`にテンプレート+ADR11本の初版をドラフト（AI生成、著者の検収待ち）
+- **DB分離と本番マイグレーション経路の新設（2026-07-27）**:
+  - Neonのbranch機能でdev用DBをproduction branchから分離。`.env.development`を新branchの
+    接続文字列に差し替え、`DATABASE_URL`（pooled）と`DATABASE_URL_UNPOOLED`（直結）が
+    別ホストになるよう是正（同一値だった疑いは事実だった）。分離はproduction branch側で
+    マーカー行が見えないことを確認済み
+  - **本番へマイグレーションを適用する仕組みが存在しなかったことが発覚**。共用DBだったため
+    ローカルの`drizzle-kit migrate`が副作用として本番にも効いていただけだった
+  - `BE_deploy.yml`の`Deploy to fly.io`の直前で`bun run db:migrate`を実行するステップを追加。
+    migrateが失敗すればdeployに到達しない構造。空値のsecretでpushして`Deploy`が
+    skippedになることを実地検証済み（詳細は`docs/progress.md` 2026-07-27参照）
 - **未解決の積み残し**:
-  - 本番/開発でNeon DBを共用している（分離は意図的に後回し。Neonのbranch機能で低コスト分離可能、
-    Week3で意図的にバグを再現する実験を本番と共有のDBに対して行う点は要注意）
-  - `.env.development`の`DATABASE_URL`と`DATABASE_URL_UNPOOLED`が同一の値になっている疑い（`docs/adr/0006`）
+  - **本番マイグレーションのsecret（GitHub Actionsの`DATABASE_URL_UNPOOLED`）の向き先が未検証**。
+    新規`.sql`が無い状態ではdev branchを向いていても同じくsuccessするため。次のマイグレーションを
+    pushし、production branchの`drizzle.__drizzle_migrations`が2本→3本に増えるかで確認する
+  - CIのmigrate方式が安全なのは**追加系マイグレーションに限る**。列削除やNOT NULL後付けには
+    expand/contractが必要（drizzle-kitにdown migrationは無く、ロールバックは存在しない）
+  - 本番マイグレーション方式のADR（3案の比較とentrypoint案を捨てた理由）が未作成
   - `docs/adr/`の各ADRは著者本人の検収前（TODOが残る箇所あり）
   - 放置履歴機能（UI向け、raw units等の永続化）はIssue #3で保留中
 - **次にやること（Week 3）**:
+  0. 設計問答の残り: 「`FOR UPDATE`無しで二重販売が成立するタイムライン」を自分で書く
+     （ロック対象の行の選定と、ロック順序の固定による デッドロック回避は回答済み）
   1. listings 出品・購入トランザクション（Drizzle `.for('update')`）
   2. 並行購入スクリプトで二重販売を再現（FOR UPDATE無しの状態で）
-  3. `SELECT ... FOR UPDATE` で修正、複数行ロックの順序（デッドロック回避）を今回初めて扱う
+  3. `SELECT ... FOR UPDATE` で修正、複数行ロックの順序（デッドロック回避）を今回初めて扱う。
+     テーブル間の順序（listings → item_instances → wallets）も決めて明文化する。
+     `ORDER BY ... FOR UPDATE`でロック取得順が保証されるかは未確認のため実験で決める
   4. 並行攻撃を自動テスト化（Vitest + 実Postgres）
 - 全体像は `docs/roadmap.md` を参照
 
