@@ -110,7 +110,7 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 
 ## 現在地
 
-- **現在のフェーズ: Week 2（DB設計の理解 → データの土台）完了 → Week 3（同時実行制御の山場）へ移行**
+- **現在のフェーズ: Week 1残タスク・Week 2完了 → Week 3（同時実行制御の山場）へ着手**
 - Week 1 のゴール: 本番URLで `/health` が返る + push で自動デプロイされる骨格 → **達成（2026-07-13）**
 - Week 2 のゴール達成内容:
   - DB設計レビューのゲート通過（2026-07-16）: 「`wallets`はキャッシュで残高は`ledger_entries`から導出」
@@ -124,10 +124,20 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
     read/delete等は不要と判断し、作成・更新のみを実装する形にスコープを絞った
 - フロント最小構成（Vite+Phaser 起動 + /health 表示）→ **達成（2026-07-13）**。
   モック採掘演出を `docs/client-design.md` のステップ計画に沿って拡張中（Step 2 から再開）
+- **Week 1 残タスクをクローズ（2026-07-27）**:
+  - Issue #4（Docker起動時にdotenv/.envが読み込めない問題）を解消。`dotenv.config()`を削除し
+    Bunの`.env`自動ロード（CWD基準）に一本化、Dockerfileの`WORKDIR`を`apps/server`に変更。
+    対応中に**本番Fly appが放置tick実装以降クラッシュループしていたこと**、`DATABASE_URL` secretが
+    未設定だったことが発覚し、あわせて復旧。CIの「デプロイ成功」表示と実機反映が食い違う実例に遭遇
+    （詳細・学習ノートは`docs/progress.md` 2026-07-24参照）
+  - `docker-compose.yml`を追加（server単体をラップ、DBは引き続きNeon。ローカルPostgresは
+    二重運用コストを避けるため見送り）
+  - `docs/adr/`にテンプレート+ADR11本の初版をドラフト（AI生成、著者の検収待ち）
 - **未解決の積み残し**:
-  - Docker起動時に環境変数(dotenv/.env)が読み込めない問題（Issue #4）。Bunの`.env`自動ロードは
-    カレントディレクトリ依存で、Dockerfileの起動パス（リポジトリルートから実行）だと拾えない
-  - Week 1 残タスク: docker-compose（ローカルPostgres） / ADRの清書
+  - 本番/開発でNeon DBを共用している（分離は意図的に後回し。Neonのbranch機能で低コスト分離可能、
+    Week3で意図的にバグを再現する実験を本番と共有のDBに対して行う点は要注意）
+  - `.env.development`の`DATABASE_URL`と`DATABASE_URL_UNPOOLED`が同一の値になっている疑い（`docs/adr/0006`）
+  - `docs/adr/`の各ADRは著者本人の検収前（TODOが残る箇所あり）
   - 放置履歴機能（UI向け、raw units等の永続化）はIssue #3で保留中
 - **次にやること（Week 3）**:
   1. listings 出品・購入トランザクション（Drizzle `.for('update')`）
