@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - apps/client/**
+      - apps/server/**
       - packages/shared/**
       - bun.lock
       - package.json

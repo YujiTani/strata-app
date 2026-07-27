@@ -2,6 +2,9 @@ name: BE_Deploy
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 concurrency:
   group: deploy-production
