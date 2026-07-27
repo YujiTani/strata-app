@@ -4,7 +4,9 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "bun run --watch src/index.ts",
-		"db:check": "bun run db/db-check.ts"
+		"db:check": "bun run db/db-check.ts",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
 		"@elysiajs/swagger": "^1.3.1",

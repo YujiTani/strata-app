@@ -27,6 +27,15 @@ jobs:
       - name: Run lint
         run: bun run lint
 
+      # デプロイの前に流す。ここで失敗すれば deploy ステップは実行されず、
+      # スキーマが古いまま新しいコードが本番に出ることを防げる。
+      # 接続はプール経由ではなく直結（unpooled）を使う（DDL のため）。
+      - name: Run DB migrations
+        run: bun run db:migrate
+        working-directory: apps/server
+        env:
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
       
