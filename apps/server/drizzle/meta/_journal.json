@@ -15,6 +15,13 @@
 			"when": 1784877482438,
 			"tag": "0001_many_tinkerer",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1785223962184,
+			"tag": "0002_careful_warbird",
+			"breakpoints": true
 		}
 	]
 }

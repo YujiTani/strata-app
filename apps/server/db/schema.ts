@@ -101,7 +101,7 @@ export const item_instances = pgTable("item_instances", {
 	is_listed: boolean("is_listed").notNull().default(false),
 });
 
-export const listings = pgTable("listings", {
+export const market_listings = pgTable("market_listings", {
 	id: uuid("id").defaultRandom().primaryKey(),
 	seller_id: uuid("seller_id")
 		.notNull()
