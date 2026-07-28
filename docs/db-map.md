@@ -41,10 +41,10 @@ A ──1:1──> B     Aの1行に対して、Bの行はちょうど1つ
                  │              │        │            ▲
                  │ owner        │ owner  │ listed_as  │ (playerと無関係)
                  │              │        ▼
-                 │              │   ┌──────────┐
-                 │              │   │ listings │  出品（マーケット）
-                 │              │   └────┬─────┘
-                 │              │        │ seller / sold_to
+                 │              │   ┌─────────────────┐
+                 │              │   │ market_listings │  出品（マーケット）
+                 │              │   └────────┬────────┘
+                 │              │            │ seller / sold_to
                  ▼              ▼        ▼
         ╔═══════════════════════════════════════════╗
         ║               players                     ║  ← すべての起点
@@ -67,7 +67,7 @@ A ──1:1──> B     Aの1行に対して、Bの行はちょうど1つ
 |---|---|---|
 | **マスタ（動かない）** | `item_defs` `drop_tables` | 運営が用意する定義。プレイ中に増減しない |
 | **所有（動く）** | `inventory_stacks` `item_instances` `village_buildings` | 誰が何を持っているか |
-| **お金と記録（動く）** | `wallets` `ledger_entries` `listings` `daily_claims` | 取引と、その痕跡 |
+| **お金と記録（動く）** | `wallets` `ledger_entries` `market_listings` `daily_claims` | 取引と、その痕跡 |
 
 ---
 
@@ -180,7 +180,7 @@ item_instances
 
 - **1行 = 現実に存在する1個**。同じ「炎の剣」でも atk が違えば別物
 - `owner_id` を書き換えることが**所有権の移動**そのもの
-- ⚠️ **`is_listed` は `listings.status` と情報が重複している**（下の §4 で扱う）
+- ⚠️ **`is_listed` は `market_listings.status` と情報が重複している**（下の §4 で扱う）
 
 ```
    item_defs（設計図）          item_instances（実体）
@@ -194,10 +194,10 @@ item_instances
 
 ---
 
-### listings — 出品（マーケット）★今週の主戦場
+### market_listings — 出品（マーケット）★今週の主戦場
 
 ```
-listings
+market_listings
 ├─ id               [PK]                  uuid
 ├─ seller_id        [FK→players]          uuid   売り手
 ├─ item_instance_id [FK→item_instances]   uuid   売りに出している“その1個”
@@ -237,7 +237,7 @@ idle_tick_events
 ```
      買い手 B が listing L（価格500）を購入する
 
-  listings                    item_instances            wallets              ledger_entries
+  market_listings                    item_instances            wallets              ledger_entries
   ┌──────────────┐            ┌───────────────┐        ┌──────────┐         ┌──────────┐
   │ id      : L  │            │ id   : it-001 │        │ A : 1000 │         │ (追記のみ)│
   │ seller  : A  │───────────▶│ owner: A      │        │ B : 800  │         └──────────┘
@@ -260,7 +260,7 @@ idle_tick_events
 
 | テーブル | 何が変わるか | 種類 |
 |---|---|---|
-| `listings` | `status` → `sold`、`sold_to` → 買い手 | UPDATE |
+| `market_listings` | `status` → `sold`、`sold_to` → 買い手 | UPDATE |
 | `item_instances` | `owner_id` → 買い手、`is_listed` → false | UPDATE |
 | `wallets` | 買い手 −500 / 売り手 +500 | UPDATE ×2 |
 | `ledger_entries` | 2行 追記（同じ `ref_id`） | INSERT ×2 |
@@ -280,20 +280,20 @@ idle_tick_events
 
 ```
    「it-001 は出品中である」
-        ├── listings.status = 'active'      ← 掲示側の表現
+        ├── market_listings.status = 'active'      ← 掲示側の表現
         └── item_instances.is_listed = true  ← 現物側の表現
 ```
 
-`listings.status` を `sold` にして `is_listed` を `true` のまま落としたら、
+`market_listings.status` を `sold` にして `is_listed` を `true` のまま落としたら、
 「売れているのに出品中の現物」というありえない状態が生まれる。
 
 考えておくべき問い（答えは自分で出す）:
 
 1. この2つが食い違ったとき、**どちらを信じるのか**
-2. そもそも `is_listed` は必要か。`listings` を引けば分かることではないか
+2. そもそも `is_listed` は必要か。`market_listings` を引けば分かることではないか
 3. 必要だとしたら、どうやって食い違いを**構造的に**防ぐか
    （アプリで頑張る / DB制約で縛る / 部分ユニークインデックス、のどれか）
-4. 「1つの `item_instance` に `active` な `listings` は最大1行」は、いま何が保証しているか
+4. 「1つの `item_instance` に `active` な `market_listings` は最大1行」は、いま何が保証しているか
 
 ---
 
@@ -308,7 +308,7 @@ JOIN players   p ON p.id = ii.owner_id;
 
 -- 出品中の一覧
 SELECT l.id, l.price, l.status, sp.name AS seller, d.name AS item
-FROM listings l
+FROM market_listings l
 JOIN players sp ON sp.id = l.seller_id
 JOIN item_instances ii ON ii.id = l.item_instance_id
 JOIN item_defs d ON d.id = ii.item_def_id
@@ -326,7 +326,7 @@ GROUP BY p.name, w.balance;
 
 -- ★二重販売の検出: 同じ現物に active な出品が2つ以上ないか
 SELECT item_instance_id, COUNT(*)
-FROM listings WHERE status = 'active'
+FROM market_listings WHERE status = 'active'
 GROUP BY item_instance_id HAVING COUNT(*) > 1;
 ```
 
@@ -340,5 +340,5 @@ GROUP BY item_instance_id HAVING COUNT(*) > 1;
 | ledger_entries | 適用済み | tick で追記 |
 | idle_tick_events | 適用済み | tick で追記 |
 | item_defs / item_instances / inventory_stacks | 適用済み | **未実装** |
-| listings | 適用済み | **未実装（Week 3 でここから）** |
+| market_listings | 適用済み | **未実装（Week 3 でここから）** |
 | village_buildings / daily_claims / drop_tables | 適用済み | 未実装 |

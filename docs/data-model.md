@@ -27,13 +27,13 @@ erDiagram
     players ||--o{ ledger_entries : records
     players ||--o{ inventory_stacks : owns
     players ||--o{ item_instances : owns
-    players ||--o{ listings : sells
+    players ||--o{ market_listings : sells
     players ||--o{ village_buildings : builds
     players ||--o{ daily_claims : claims
     item_defs ||--o{ inventory_stacks : typed_as
     item_defs ||--o{ item_instances : typed_as
     item_defs ||--o{ drop_tables : drops
-    item_instances |o--o| listings : listed_as
+    item_instances |o--o| market_listings : listed_as
 
     players {
       uuid id PK
@@ -74,7 +74,7 @@ erDiagram
       jsonb rolled_stats "攻撃力などの個体値"
       boolean is_listed
     }
-    listings {
+    market_listings {
       uuid id PK
       uuid seller_id FK
       uuid item_instance_id FK
@@ -114,7 +114,7 @@ erDiagram
 | ledger_entries | 通貨の動きを全部記録（複式） | 元帳設計・整合性 |
 | inventory_stacks | 量で持つ素材 | 加減算の原子性 |
 | item_instances | 1点もののレア | 所有権の移動 |
-| listings | マーケット出品 | **同時購入のロック（山場）** |
+| market_listings | マーケット出品 | **同時購入のロック（山場）** |
 | village_buildings | 村の発展＝通貨/素材のシンク | 複数リソースを1トランザクションで消費 |
 | daily_claims | ログインボーナス | **冪等性（UNIQUE制約）** |
 | drop_tables | サーバー側のドロップ抽選 | 参照データ設計 |
@@ -126,13 +126,13 @@ erDiagram
 ### 1. アイテム購入（マーケット）＝ Week 3 の本丸
 ```
 BEGIN
-  SELECT * FROM listings WHERE id = ? FOR UPDATE   -- 行ロック（Drizzle: .for('update')）
+  SELECT * FROM market_listings WHERE id = ? FOR UPDATE   -- 行ロック（Drizzle: .for('update')）
   -- status = 'active' を確認（でなければ ROLLBACK）
   -- 買い手 wallet から出金（ledger に負の entry）
   -- 売り手 wallet へ入金（ledger に正の entry）
   -- 手数料をシンクへ（ledger）
   -- item_instances.owner_id を買い手に更新、is_listed = false
-  -- listings.status = 'sold', sold_to = 買い手
+  -- market_listings.status = 'sold', sold_to = 買い手
 COMMIT
 ```
 - **Week 3 の山場**: 同じ listing を並列で買うスクリプトを撃つ → 二重販売を再現 → `FOR UPDATE` で修正 → Vitest + 実Postgres で自動テスト化。

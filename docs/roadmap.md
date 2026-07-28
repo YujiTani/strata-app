@@ -49,7 +49,7 @@
 - 放置 tick の冪等な付与（サーバー時刻で計算、リトライで二重付与しない）
 
 ### Week 3 — 山場：同時実行制御
-- listings 出品・購入トランザクション（Drizzle `.for('update')`）
+- market_listings 出品・購入トランザクション（Drizzle `.for('update')`）
 - **並行購入スクリプトで二重販売を再現（FOR UPDATE 無し）**
 - `SELECT ... FOR UPDATE` で修正
 - 並行攻撃を自動テスト化（壊れる→直る を再現可能に / Vitest + 実Postgres）

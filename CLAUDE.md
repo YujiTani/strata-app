@@ -156,10 +156,10 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
 - **次にやること（Week 3）**:
   0. 設計問答の残り: 「`FOR UPDATE`無しで二重販売が成立するタイムライン」を自分で書く
      （ロック対象の行の選定と、ロック順序の固定による デッドロック回避は回答済み）
-  1. listings 出品・購入トランザクション（Drizzle `.for('update')`）
+  1. market_listings 出品・購入トランザクション（Drizzle `.for('update')`）
   2. 並行購入スクリプトで二重販売を再現（FOR UPDATE無しの状態で）
   3. `SELECT ... FOR UPDATE` で修正、複数行ロックの順序（デッドロック回避）を今回初めて扱う。
-     テーブル間の順序（listings → item_instances → wallets）も決めて明文化する。
+     テーブル間の順序（market_listings → item_instances → wallets）も決めて明文化する。
      `ORDER BY ... FOR UPDATE`でロック取得順が保証されるかは未確認のため実験で決める
   4. 並行攻撃を自動テスト化（Vitest + 実Postgres）
 - 全体像は `docs/roadmap.md` を参照
