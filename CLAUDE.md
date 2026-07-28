@@ -144,10 +144,17 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
   - `BE_deploy.yml`の`Deploy to fly.io`の直前で`bun run db:migrate`を実行するステップを追加。
     migrateが失敗すればdeployに到達しない構造。空値のsecretでpushして`Deploy`が
     skippedになることを実地検証済み（詳細は`docs/progress.md` 2026-07-27参照）
+- **`listings` → `market_listings` にリネーム（2026-07-28）**:
+  - 名前から「何の掲示か」が読み取れないため改名。アプリ側の参照は`schema.ts`の1行のみで無傷
+  - `drizzle-kit generate`はリネームを差分から自動判定できず**対話で create / rename を聞いてくる**
+    （createを選ぶとDROP+CREATEでデータ全損）。renameを選択し、生成SQLが`ALTER TABLE ... RENAME TO`
+    で始まることを確認。FK制約名はdrizzleがDROP→ADDで付け替えるため手作業不要
+  - `ADD CONSTRAINT FOREIGN KEY`は既存行の検証のため参照元・参照先の両テーブルにロックを取る。
+    行数が多い本番では書き込みが止まる＝**マイグレーション自体がロック事象**（今回は0行のため無害）
+  - **これにより本番マイグレーションのsecretの向き先が検証できた**: `0002`のpushで
+    production branchにも`market_listings`が反映され、`DATABASE_URL_UNPOOLED`が
+    production branchを指していることを確認。積み残し1件クローズ
 - **未解決の積み残し**:
-  - **本番マイグレーションのsecret（GitHub Actionsの`DATABASE_URL_UNPOOLED`）の向き先が未検証**。
-    新規`.sql`が無い状態ではdev branchを向いていても同じくsuccessするため。次のマイグレーションを
-    pushし、production branchの`drizzle.__drizzle_migrations`が2本→3本に増えるかで確認する
   - CIのmigrate方式が安全なのは**追加系マイグレーションに限る**。列削除やNOT NULL後付けには
     expand/contractが必要（drizzle-kitにdown migrationは無く、ロールバックは存在しない）
   - 本番マイグレーション方式のADR（3案の比較とentrypoint案を捨てた理由）が未作成

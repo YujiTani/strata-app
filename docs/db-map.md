@@ -237,23 +237,23 @@ idle_tick_events
 ```
      買い手 B が listing L（価格500）を購入する
 
-  market_listings                    item_instances            wallets              ledger_entries
-  ┌──────────────┐            ┌───────────────┐        ┌──────────┐         ┌──────────┐
-  │ id      : L  │            │ id   : it-001 │        │ A : 1000 │         │ (追記のみ)│
-  │ seller  : A  │───────────▶│ owner: A      │        │ B : 800  │         └──────────┘
-  │ item    :it-001            │ is_listed: T  │        └──────────┘
-  │ price   : 500│            └───────────────┘
-  │ status  :active
-  │ sold_to : NULL
-  └──────────────┘
+  market_listings             item_instances          wallets              ledger_entries
+  ┌────────────────────┐      ┌────────────────┐      ┌──────────┐        ┌────────────┐
+  │ id      : L        │      │ id   : it-001  │      │ A : 1000 │        │ (追記のみ) │
+  │ seller  : A        │─────▶│ owner: A       │      │ B :  800 │        └────────────┘
+  │ item    : it-001   │      │ is_listed: T   │      └──────────┘
+  │ price   : 500      │      └────────────────┘
+  │ status  : active   │
+  │ sold_to : NULL     │
+  └────────────────────┘
 
                         ── 購入トランザクション ──
                                     ▼
 
-  ┌──────────────┐            ┌───────────────┐        ┌──────────┐         ┌────────────────────────┐
-  │ status :sold │            │ owner: B      │        │ A : 1500 │         │ B  -500 purchase ref=L │
-  │ sold_to: B   │            │ is_listed: F  │        │ B : 300  │         │ A  +500 sale     ref=L │
-  └──────────────┘            └───────────────┘        └──────────┘         └────────────────────────┘
+  ┌────────────────────┐      ┌────────────────┐      ┌──────────┐        ┌────────────────────────┐
+  │ status  : sold     │      │ owner: B       │      │ A : 1500 │        │ B  -500 purchase ref=L │
+  │ sold_to : B        │      │ is_listed: F   │      │ B :  300 │        │ A  +500 sale     ref=L │
+  └────────────────────┘      └────────────────┘      └──────────┘        └────────────────────────┘
 ```
 
 **変更点の一覧:**
@@ -280,8 +280,8 @@ idle_tick_events
 
 ```
    「it-001 は出品中である」
-        ├── market_listings.status = 'active'      ← 掲示側の表現
-        └── item_instances.is_listed = true  ← 現物側の表現
+        ├── market_listings.status  = 'active'   ← 掲示側の表現
+        └── item_instances.is_listed = true      ← 現物側の表現
 ```
 
 `market_listings.status` を `sold` にして `is_listed` を `true` のまま落としたら、
