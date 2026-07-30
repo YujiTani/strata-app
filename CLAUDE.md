@@ -154,21 +154,37 @@ TypeScript で構築する個人開発。設計から本番運用（Docker・Fly
   - **これにより本番マイグレーションのsecretの向き先が検証できた**: `0002`のpushで
     production branchにも`market_listings`が反映され、`DATABASE_URL_UNPOOLED`が
     production branchを指していることを確認。積み残し1件クローズ
+- **Q2完了・購入設計の確定（2026-07-30）**:
+  - `docs/week3-q2-schedule.md`: `FOR UPDATE`無しで二重販売が成立するスケジュールを19ステップで作成。
+    最大の学びは**待たされた`UPDATE`は救いにならない**こと。待ちが解けた`UPDATE`は最新版を読み直して
+    `WHERE`を再評価するが（EvalPlanQual）、`WHERE id = ?`しか無いため必ずマッチし、**古い判断のまま
+    実行される**。判断条件はアプリの`if`の中にあり、**DBにとっては存在しない**
+  - 危険な窓は「①と③の間」ではなく**「①を読んでからCOMMITするまで」全体**（未COMMITは他Txから
+    見えないため）。壊れないのは「AがCOMMITした後にBが始まる」場合のみ
+  - **保存則チェックでは検出できない**: 通貨総量も`wallets`↔`ledger_entries`の一致も
+    `owner_id`の単一性も保たれたまま二重販売が成立する。**「整合性チェックが通ること」は
+    「壊れていないこと」を意味しない**。物証は`ledger_entries`が1取引4行になることのみ
+  - **ADR-0012**（マーケット購入の同時実行制御）を起こした。決定はアプリ層`FOR UPDATE` +
+    DB層`purchases`テーブル`UNIQUE(market_listing_id)`の二重防御、`purchases.id`を`ref_id`に、
+    ロック順序は`market_listings → item_instances → players → wallets`（同テーブル内は`player_id`昇順）
 - **未解決の積み残し**:
   - CIのmigrate方式が安全なのは**追加系マイグレーションに限る**。列削除やNOT NULL後付けには
     expand/contractが必要（drizzle-kitにdown migrationは無く、ロールバックは存在しない）
+  - **素材（`inventory_stacks`）が出品できない**。`spec.md`は「自給自足できない素材を売買する市場」を
+    経済ループの中心に置いているのに、`market_listings.item_instance_id`はNOT NULLで1点ものしか
+    指せない。**仕様とスキーマの食い違い**。Week 3は二重販売の教材として1点ものに絞る判断（先送りを自覚）
+  - `item_instances.is_listed`は削除方針だが、列削除＝破壊的マイグレーションのため実施は後回し
   - 本番マイグレーション方式のADR（3案の比較とentrypoint案を捨てた理由）が未作成
-  - `docs/adr/`の各ADRは著者本人の検収前（TODOが残る箇所あり）
+  - `docs/adr/`の各ADRは著者本人の検収前（0012含む。TODOが残る箇所あり）
   - 放置履歴機能（UI向け、raw units等の永続化）はIssue #3で保留中
 - **次にやること（Week 3）**:
-  0. 設計問答の残り: 「`FOR UPDATE`無しで二重販売が成立するタイムライン」を自分で書く
-     （ロック対象の行の選定と、ロック順序の固定による デッドロック回避は回答済み）
-  1. market_listings 出品・購入トランザクション（Drizzle `.for('update')`）
-  2. 並行購入スクリプトで二重販売を再現（FOR UPDATE無しの状態で）
-  3. `SELECT ... FOR UPDATE` で修正、複数行ロックの順序（デッドロック回避）を今回初めて扱う。
-     テーブル間の順序（market_listings → item_instances → wallets）も決めて明文化する。
-     `ORDER BY ... FOR UPDATE`でロック取得順が保証されるかは未確認のため実験で決める
-  4. 並行攻撃を自動テスト化（Vitest + 実Postgres）
+  1. ADR-0012の検収（「理由」「結果・トレードオフ」を自分の言葉で説明できるか）
+  2. `POST /market_listings`（出品）→ 購入トランザクション。**まず`FOR UPDATE`無しで書く**
+  3. 並行購入スクリプトで二重販売を再現（紙の予言が現実に再現されるかの確認）
+  4. `SELECT ... FOR UPDATE` + `purchases`の`UNIQUE`で修正
+  5. `ORDER BY ... FOR UPDATE`でロック取得順が保証されるかを実験で確定（ADR-0012 TODO）
+  6. 既存tick実装のロック順序がADR-0012の宣言順序と矛盾しないかコードで確認
+  7. 並行攻撃を自動テスト化（Vitest + 実Postgres）
 - 全体像は `docs/roadmap.md` を参照
 
 > セッション開始時、ここの「現在のフェーズ」を必ず確認すること。

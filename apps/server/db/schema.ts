@@ -98,7 +98,6 @@ export const item_instances = pgTable("item_instances", {
 		.notNull()
 		.references(() => item_defs.id),
 	rolled_stats: jsonb("rolled_stats").notNull(),
-	is_listed: boolean("is_listed").notNull().default(false),
 });
 
 export const market_listings = pgTable("market_listings", {
@@ -180,6 +179,9 @@ export const table = {
 	wallets,
 	ledger_entries,
 	idle_tick_events,
+	market_listings,
+	item_instances,
+	item_defs,
 } as const;
 
 export type Table = typeof table;

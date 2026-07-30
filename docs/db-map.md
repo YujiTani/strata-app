@@ -342,3 +342,39 @@ GROUP BY item_instance_id HAVING COUNT(*) > 1;
 | item_defs / item_instances / inventory_stacks | 適用済み | **未実装** |
 | market_listings | 適用済み | **未実装（Week 3 でここから）** |
 | village_buildings / daily_claims / drop_tables | 適用済み | 未実装 |
+
+
+時刻 | TxA | DBの確定
+-------------------
+t1  │ BEGIN
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t2 | SELECT status, sold_to FROM market_listings WHERE id = 出品#1 | wallets.id = A = 1000
+   │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+   | [信じていること: status="active", sold_id: NULL]
+------------------------------
+t3 | if market_listings status="active", sold_to=NULL の場合、t4へ | wallets.id = A = 1000
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t4 | UPDATE market_listings status="sold", sold_to="A" ◆market_listings.id=Aをロック | wallets.id = A = 1000
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t5 | UPDATE item_instances owner_id="A", is_listed=false | wallets.id = A = 1000 ◆ 出品#1 の行
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t6 | UPDATE wallets player_id="A", balance - 500 | wallets.id = A = 1000  ◆ 剣#1 の行
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t7 | UPDATE wallets player_id="売り手", balance + 500 | wallets.id = A = 1000  ◆ 買い手A の行
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t8 | INSERT INTO ledger_entries player_id="A", amount -500, reason="sale", ref_id="wallets.id" | wallets.id = A = 1000 │ ◆ 売り手 の行
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t9 | INSERT INTO ledger_entries player_id="売り手", amount +500, reason="sale", ref_id="wallets.id" | wallets.id = A = 1000
+    │ 出品#1: active/NULL │ 剣#1: 売り手,true │ 売り手=0 買A=1000 買B=1000
+------------------------------
+t10 | COMMIT | wallets.id = A = 500
+t11 │ COMMIT
+    │ 出品#1: sold/買い手A │ 剣#1: 買い手A,false │ 売り手=500 買A=500 買B=1000
+                ↑丸で囲む        ↑丸で囲む          ↑丸で囲む

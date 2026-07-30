@@ -20,6 +20,7 @@
 | [0009](./0009-frontend-stack.md) | フロントエンド構成 | 決定 |
 | [0010](./0010-backend-hosting-cicd.md) | バックエンドのアプリ基盤・ビルド・CI/CD | 決定 |
 | [0011](./0011-frontend-hosting.md) | フロントエンドのホスティング | 決定 |
+| [0012](./0012-marketplace-purchase-concurrency.md) | マーケット購入の同時実行制御（FOR UPDATE + UNIQUE の二重防御、ロック順序） | 決定 |
 
 ## 検収について
 
